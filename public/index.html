@@ -43,32 +43,67 @@
       #checkinMap {
         height: 500px;
         margin: 8px 0px;
+        z-index: 1;
       }
 
     </style>
 
-
-
-
     <title>City Fix App</title>
+
+
+    <style>
+      
+      /* The Modal (background) */
+      .modal {
+        position: fixed; /* Stay in place */
+        z-index: 2; /* Sit on top */
+        padding-top: 100px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+      
+      /* Modal Content */
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+      }
+      
+      /* The Close Button */
+      .close {
+        color: black;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      
+      .close:hover,
+      .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      </style>
+
   </head>
 
   <body>
     <h1>CityFix App</h1>
-
-
-    
-
-    
-  
-    
+    <!--HTML for Longiturde/Latitude/Hazard -->
     <div class="container">
         <form action="" id="signupForm">
           <label for="Long">Longitude</label>
           <input type="text" id="longitude" name="Long">
               
           <label for="Lat">Latitude</label>
-          <input type= "text" id="latitude" name="Lat"></textarea>
+          <input type= "text" id="latitude" name="Lat">
 
           <label for="hazard">Hazard Type</label>
           <input type= "text" id="hazard" name="hazard"></textarea>
@@ -79,10 +114,53 @@
           <div id="checkinMap"></div>
         </form>
     </div>
-  
-    
+
+    <!-- Modal functions-->
+    <!-- Open The Modal -->
+    <button id="myBtn">Open Disclaimer</button>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <p align="center", style = "font-family:georgia,garamond,serif;font-size:25px;" > Please Do Not Use Application While Operating A Vehicle</p>
+      </div>
+
+    </div>
+
+     
 
   </body>
+
+      <script>
+
+        // Get the modal
+        var modal = document.getElementById("myModal");
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal 
+        btn.onclick = function() {
+          modal.style.display = "block";
+        }
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+          modal.style.display = "none";
+        }
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+      
+
+        </script>
+
 </html>
 
 
@@ -91,15 +169,20 @@
 
 <script> 
 
-
-
 //initialize map
   const mymap = L.map('checkinMap').setView([34.0522, -118.2437], 10);
   
 //initialize gps
   L.control.locate().addTo(mymap);
 
-
+  /*
+  var dark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+	    maxZoom: 20,
+	    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+    });
+    dark.addTo(mymap);
+  */
+  
 
   const attribution =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -107,7 +190,7 @@
   const tileUrl = 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png';
   const tiles = L.tileLayer(tileUrl, { attribution });
   tiles.addTo(mymap);
-
+  
 
     let lat, lon;
     const button = document.getElementById('submit');
@@ -126,18 +209,22 @@
         },
         body: JSON.stringify(data)
       };
+      //using fetch API to POST/GET data to/from database.db
+      // '/api' is name of route address
+
+      //api name of address used as a request
+      //options is name of response
       const response = await fetch('/api', options);
       const json = await response.json();
       console.log(json);
 
     });
 
-
+    //initialize marker 
     var user_location = [34.0522, -118.2437]
     var marker ;
 
-    // After the map style has loaded on the page, add a source layer and default
-    // styling for a single point.
+    // After the map loads on the page, add a source layer and default
     mymap.on('load', function() {
         addMarker(user_location,'load');
       
@@ -154,9 +241,7 @@
 
     
     
-    
-        
-    function addMarker(latlng,event) {
+   function addMarker(latlng,event) {
           
       if(event === 'click'){
         user_location = latlng;
@@ -195,11 +280,19 @@
     for (item of data) {
       pointList.push([item.lat, item.lon]);
       console.log(item);
-      const marker = L.marker([item.lat, item.lon], {icon: myIcon} );
-      var popup = marker.bindPopup('This is a pothole. ' + marker.getLatLng() ).openPopup()
-      popup.addTo(mymap);
-    }
 
+      const marker = L.marker([item.lat, item.lon], {icon: myIcon} );
+
+      // hazard location to marker popup does not work yet
+      //because it hasnt fetched it yet, include in push
+      //then write get element by to store current values
+      //var popup = marker.bindPopup('This is a pothole. ' + marker.getLatLng() ).openPopup()
+
+
+      var popup = marker.bindPopup('<span> <b>Hazard Type</b> </span> <br/> <input id="hazardName" type="text"/> <br/> <span> <b>Hazard Location</b> </span> <br/> <input id="hazardLoc" type="text"/> <br/><br/> <span> <b>Hazard Description<b/> </span> <br/><textarea id="hazDesc" cols="25" rows="5"> </textarea> <br/> <br/><input type="button" id="saveBtn" value="Save" onclick="saveIdIW()"/>' + marker.getLatLng() ).openPopup()
+      popup.addTo(mymap);
+
+    }
   }
       
       
